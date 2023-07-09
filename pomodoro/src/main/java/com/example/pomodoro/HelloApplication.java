@@ -5,6 +5,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -36,8 +37,14 @@ import java.util.Timer;
 
 public class HelloApplication extends Application {
     private long algusAeg;
+    private boolean jookseb = false;
+    private String timeText = "00:00:00";
+    private Timeline timeline;
+    boolean oliPausil = false;
+    long elapsedTime = 1;
+    long algusPausil = 1;
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
         BorderPane border = new BorderPane();
 
         //lisab borderpaneile regioonid
@@ -101,18 +108,18 @@ public class HelloApplication extends Application {
     public void animateGlowEffect(Button button) {
         DropShadow dropShadow = (DropShadow) button.getEffect();
 
-        Timeline timeline = new Timeline(
+        Timeline timeline1 = new Timeline(
                 new KeyFrame(Duration.ZERO, new KeyValue(dropShadow.radiusProperty(), 0)),
                 new KeyFrame(Duration.seconds(0.1), new KeyValue(dropShadow.radiusProperty(), 25))
         );
-        timeline.setAutoReverse(true);
+        timeline1.setAutoReverse(true);
         button.setOnMouseExited(event -> {
-            timeline.stop();
+            timeline1.stop();
             dropShadow.setRadius(0);
                 }
 
         );
-        timeline.play();
+        timeline1.play();
     }
 
     public GridPane keskOsa() {
@@ -134,7 +141,7 @@ public class HelloApplication extends Application {
         );
 
         ringNupp.setOnMouseClicked(e -> {
-            taimer2(ringNupp);
+            taimer(ringNupp);
         });
 
 
@@ -145,35 +152,65 @@ public class HelloApplication extends Application {
         return grid;
     }
 
-    public void taimer2(Button nupp) {
+    public void taimer(Button nupp) {
         nupp.setOnAction(event -> {
-            algusAeg = System.nanoTime();
-            //nupp.setDisable(true); //et sekundeid midagi ei häiriks (teeb tumedaks)
-            updateTimeElapsed(nupp);
+            if (jookseb) {
+                //kui taimer parasjagu käib -> tuleb paus
+
+                timeline.stop();
+                algusPausil = System.currentTimeMillis();
+                oliPausil = true;
+                jookseb = false;
+                System.out.println("paus");
+            }
+            else if (oliPausil) {
+                //leiame kui kaua oli pausil
+                long pausilAeg = System.currentTimeMillis() - algusPausil;
+                //lisame algusajale pausil oldud aja, et timer algaks samast kohast
+                algusAeg += pausilAeg;
+                updateTimeElapsed(nupp);
+                jookseb = true;
+                oliPausil = false;
+                //oliPausil on tõene ja hakkab jooksma
+                System.out.println("votsin pausilt ara");
+            }
+            else {
+                //kui taimer ei käi ega pole pausil
+                jookseb = true;
+                System.out.println("tere");
+                algusAeg = System.currentTimeMillis();
+                //nupp.setDisable(true); //et sekundeid midagi ei häiriks (teeb tumedaks)
+                updateTimeElapsed(nupp);
+            }
         });
+
     }
 
+
     private void updateTimeElapsed(Button nupp) {
-        int durationSec = 100;
-        //timeline hakkab pidevalt actionit nupule saatma
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0.1), event -> {
-            long currentTime = System.nanoTime();
+        int durationSec = 60 + 1;
+
+        //timeline hakkab 0.1 seki tagant eventi handlima
+        timeline = new Timeline(new KeyFrame(Duration.seconds(0.1), event -> {
+            long currentTime = System.currentTimeMillis();
             //leiame ajavahe praeguse ja alguse vahel
             // ja teeme saadud nanosekundid sekunditeks
-            long elapsedTime = Math.round((currentTime - algusAeg) / 1_000_000_000.0);
+            elapsedTime = Math.round((currentTime - algusAeg) / 1000.0);
 
             long hours = elapsedTime / 3600;
             long minutes = (elapsedTime % 3600) / 60;
             long seconds = elapsedTime % 60; // % 60 tagab et sekundid jäävad 0..59 vahele
+
             //kui aeg tais saab
-
             if (elapsedTime >= durationSec) {
-                nupp.setText("Aeg täis!");
+                nupp.setText("Aeg täis!\n" + timeText);
+                timeline.stop();
                 //nupp.setDisable(false); //ylevalpool on enable
-            } else {
-                String timeText = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+            }
+            //kui aeg pole tais
+            else {
+                timeText = String.format("%02d:%02d:%02d", hours, minutes, seconds);
                 nupp.setText(timeText);
-
             }
         }));
         timeline.setCycleCount(Animation.INDEFINITE);
