@@ -9,11 +9,13 @@ import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.*;
@@ -36,13 +38,9 @@ import java.util.Timer;
 
 
 public class HelloApplication extends Application {
-    private long algusAeg;
     private boolean jookseb = false;
-    private String timeText = "00:00:00";
-    private Timeline timeline;
-    boolean oliPausil = false;
-    long elapsedTime = 1;
-    long algusPausil = 1;
+    private Taimer taimer;
+
     @Override
     public void start(Stage stage) {
         BorderPane border = new BorderPane();
@@ -53,6 +51,9 @@ public class HelloApplication extends Application {
         border.setStyle("-fx-background-color: #EDCBD2;");
 
         Scene scene = new Scene(border, 280,440);
+        //scene.getStylesheets().add(getClass().getResource("stylesheet.css").toString());
+        //lisame scene'ile css-i
+        scene.getStylesheets().add(this.getClass().getResource("stylesheet.css").toExternalForm());
         stage.setTitle("Study timer");
         stage.setScene(scene);
         stage.show();
@@ -71,9 +72,9 @@ public class HelloApplication extends Application {
                 67.0, 67.0,
                 33.4, 0.0);
 
-        Rectangle ruut = new Rectangle();
-        ruut.setHeight(65);
-        ruut.setWidth(65);
+        Rectangle ruut = new Rectangle(20,20);
+        ruut.setHeight(30);
+        ruut.setWidth(30);
 
         Button kolmnurkNupp = new Button();
         kolmnurkNupp.setShape(kolmnurk);
@@ -124,7 +125,8 @@ public class HelloApplication extends Application {
 
     public GridPane keskOsa() {
         GridPane grid = new GridPane();
-        grid.setAlignment(javafx.geometry.Pos.CENTER); // Set alignment to center
+        grid.setAlignment(javafx.geometry.Pos.CENTER);// Set alignment to center
+        grid.setVgap(10);
         Circle ring = new Circle(100);
 
         Button ringNupp = new Button();
@@ -134,6 +136,15 @@ public class HelloApplication extends Application {
         ringNupp.setStyle("-fx-background-color: #80C4B7; -fx-border-color: #369a89; -fx-border-width: 2px;" +
                 "-fx-font-size: 38px; -fx-text-fill: #1b6a63; -fx-font-family: Norasi; ");
 
+        TextField kirjutuskast = new TextField("Eesmärk (sekundites)");
+        kirjutuskast.setLayoutY(55);
+        //lisame kirjutuskastile css failist style'ingu
+        kirjutuskast.getStyleClass().add("text-field");
+
+
+        //kirjutuskast.getStylesheets().add("/home/samanta/projektid/Studytimer/pomodoro/src/main/resources/com/example/pomodoro/stylesheet.css");
+
+
         DropShadow dropShadow = new DropShadow(0, Color.web("#1b6a63"));
         ringNupp.setEffect(dropShadow);
         ringNupp.setOnMouseEntered(event ->
@@ -141,81 +152,20 @@ public class HelloApplication extends Application {
         );
 
         ringNupp.setOnMouseClicked(e -> {
-            taimer(ringNupp);
+            //kui taimer juba tehtud on ja see jookseb praegu (ei tee uut taimerit)
+            if (jookseb)
+                taimer.kaivita(ringNupp);
+            else {
+                //kui taimerit pole ja seega see ka ei jookse, siis loome selle
+                jookseb = true;
+                Taimer taimer = new Taimer(kirjutuskast);
+                taimer.kaivita(ringNupp);
+            }
         });
-
-
-
         grid.add(ringNupp, 0, 0);
-        GridPane.setHalignment(ring, javafx.geometry.HPos.CENTER); // Align the circle within the cell
-
+        grid.add(kirjutuskast,0,2);
+        //GridPane.setHalignment(ring, javafx.geometry.HPos.CENTER); // Align the circle within the cell
         return grid;
-    }
-
-    public void taimer(Button nupp) {
-        nupp.setOnAction(event -> {
-            if (jookseb) {
-                //kui taimer parasjagu käib -> tuleb paus
-
-                timeline.stop();
-                algusPausil = System.currentTimeMillis();
-                oliPausil = true;
-                jookseb = false;
-                System.out.println("paus");
-            }
-            else if (oliPausil) {
-                //leiame kui kaua oli pausil
-                long pausilAeg = System.currentTimeMillis() - algusPausil;
-                //lisame algusajale pausil oldud aja, et timer algaks samast kohast
-                algusAeg += pausilAeg;
-                updateTimeElapsed(nupp);
-                jookseb = true;
-                oliPausil = false;
-                //oliPausil on tõene ja hakkab jooksma
-                System.out.println("votsin pausilt ara");
-            }
-            else {
-                //kui taimer ei käi ega pole pausil
-                jookseb = true;
-                System.out.println("tere");
-                algusAeg = System.currentTimeMillis();
-                //nupp.setDisable(true); //et sekundeid midagi ei häiriks (teeb tumedaks)
-                updateTimeElapsed(nupp);
-            }
-        });
-
-    }
-
-
-    private void updateTimeElapsed(Button nupp) {
-        int durationSec = 60 + 1;
-
-        //timeline hakkab 0.1 seki tagant eventi handlima
-        timeline = new Timeline(new KeyFrame(Duration.seconds(0.1), event -> {
-            long currentTime = System.currentTimeMillis();
-            //leiame ajavahe praeguse ja alguse vahel
-            // ja teeme saadud nanosekundid sekunditeks
-            elapsedTime = Math.round((currentTime - algusAeg) / 1000.0);
-
-            long hours = elapsedTime / 3600;
-            long minutes = (elapsedTime % 3600) / 60;
-            long seconds = elapsedTime % 60; // % 60 tagab et sekundid jäävad 0..59 vahele
-
-            //kui aeg tais saab
-            if (elapsedTime >= durationSec) {
-                nupp.setText("Aeg täis!\n" + timeText);
-                timeline.stop();
-                //nupp.setDisable(false); //ylevalpool on enable
-            }
-            //kui aeg pole tais
-            else {
-                timeText = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-                nupp.setText(timeText);
-            }
-        }));
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
-
     }
 
 
