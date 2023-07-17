@@ -3,18 +3,11 @@ package com.example.pomodoro;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.StackPane;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import static javafx.animation.Animation.*;
+import java.util.regex.Pattern;
 
 public class Taimer {
     private long algusAeg;
@@ -24,12 +17,23 @@ public class Taimer {
     private boolean oliPausil = false;
     private long elapsedTime;
     private long algusPausil;
-    private String duration;
+    private long duration;
+    private Button nupp;
+    private boolean kasVoibAlustada;
 
-    public Taimer(TextField kirjutuskast) {
-        duration = kirjutuskast.getText();
-        if (duration.equals("Eesmärk (sekundites)"))
-            duration = "10";
+    public Taimer(Button nupp, TextField tunnid, TextField minutid, TextField sekundid) {
+        this.duration = ajaKalkulaator(tunnid,minutid,sekundid);
+        if (duration == -1) {
+            //kui sisestus oli vale
+            nupp.setText("  Vale\nsisestus");
+            tunnid.setText("00");
+            minutid.setText("00");
+            sekundid.setText("00");
+            kasVoibAlustada = false;
+        }
+        else
+            kasVoibAlustada = true;
+        this.nupp = nupp;
         this.algusAeg = System.currentTimeMillis();
         this.jookseb = false;
         this.timeText = "00:00:00";
@@ -38,15 +42,47 @@ public class Taimer {
 
     }
 
-    public void kaivita(Button nupp) {
-        taimeriALgus(nupp);
+    public boolean getKasVoibAlustada() {
+        //pohiprogramm kysib seda enne alustamist sest voimalik et sisestus on vale
+        return kasVoibAlustada;
     }
 
-    private void taimeriALgus(Button nupp) {
+    public long ajaKalkulaator(TextField kirjutuskast, TextField kirjutuskast2, TextField kirjutuskast3) {
+        //tehakse tundide, minutite ja sekundite kirjutuskastist aeg sekunditeks
+        int sekundid = -1;
+        //kasutatakse regexit et tuvastada kas sisend on numbriline
+        Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
+            if (pattern.matcher(kirjutuskast.getText()).matches() &&
+                    pattern.matcher(kirjutuskast2.getText()).matches() &&
+                    pattern.matcher(kirjutuskast3.getText()).matches()) {
+                System.out.println("kontroll korras");
+
+                int tunnid = Integer.parseInt(kirjutuskast.getText());
+                int minutid = Integer.parseInt(kirjutuskast2.getText());
+                sekundid = Integer.parseInt(kirjutuskast3.getText());
+
+                if (minutid > 59 || sekundid > 59) {
+                    //vale sisestus
+                    sekundid = -1;
+                }
+                else {
+                    //kui sisestus on õige - teisendus sekunditeks
+                    sekundid = sekundid + (minutid*60) + (tunnid*3600);
+                }
+
+        }
+        return sekundid;
+
+    }
+
+    public void kaivita() {
+        taimeriALgus();
+    }
+
+    private void taimeriALgus() {
         nupp.setOnAction(event -> {
             if (jookseb) {
                 //kui taimer parasjagu käib -> tuleb paus
-
                 timeline.stop();
                 algusPausil = System.currentTimeMillis();
                 oliPausil = true;
@@ -78,7 +114,7 @@ public class Taimer {
 
 
     private void updateTimeElapsed(Button nupp) {
-        int durationSec = Integer.parseInt(duration) + 1;
+        long durationSec = duration + 1;
 
         //timeline hakkab 0.1 seki tagant eventi handlima
         timeline = new Timeline(new KeyFrame(Duration.seconds(0.1), event -> {

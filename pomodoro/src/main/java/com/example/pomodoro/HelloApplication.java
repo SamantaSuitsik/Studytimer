@@ -1,40 +1,27 @@
 package com.example.pomodoro;
 
-import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.collections.ObservableMap;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Glow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 
 import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import javafx.util.Duration;
-
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Timer;
 
 
 public class HelloApplication extends Application {
@@ -45,21 +32,31 @@ public class HelloApplication extends Application {
     public void start(Stage stage) {
         BorderPane border = new BorderPane();
 
+        TextField kirjutuskast = new TextField("00");
+        TextField kirjutuskast2 = new TextField("00");
+        TextField kirjutuskast3 = new TextField("00");
+
+
+
+
         //lisab borderpaneile regioonid
-        border.setBottom(addHBoxAlumine());
-        border.setCenter(keskOsa());
+        border.setBottom(addHBoxAlumine(kirjutuskast));
+        border.setCenter(keskOsa(kirjutuskast,kirjutuskast2,kirjutuskast3));
         border.setStyle("-fx-background-color: #EDCBD2;");
 
         Scene scene = new Scene(border, 280,440);
         //scene.getStylesheets().add(getClass().getResource("stylesheet.css").toString());
         //lisame scene'ile css-i
         scene.getStylesheets().add(this.getClass().getResource("stylesheet.css").toExternalForm());
+        //lisame kirjutuskastile css failist style'ingu
+        kirjutuskast.getStyleClass().add("text-field");
+
         stage.setTitle("Study timer");
         stage.setScene(scene);
         stage.show();
     }
 
-    public HBox addHBoxAlumine() {
+    public HBox addHBoxAlumine(TextField kirjutuskast) {
         HBox hbox = new HBox();
         hbox.setPadding(new Insets(1, 1, 25, 1));
         hbox.setSpacing(110);
@@ -101,8 +98,8 @@ public class HelloApplication extends Application {
         ruutNupp.setOnMouseEntered(event -> animateGlowEffect(ruutNupp));
         kolmnurkNupp.setOnMouseEntered(event -> animateGlowEffect(kolmnurkNupp));
 
-        hbox.getChildren().addAll(kolmnurkNupp,ruutNupp);
-
+        //hbox.getChildren().addAll(kolmnurkNupp,ruutNupp);
+        hbox.getChildren().addAll(kirjutuskast);
         return hbox;
     }
 
@@ -123,28 +120,43 @@ public class HelloApplication extends Application {
         timeline1.play();
     }
 
-    public GridPane keskOsa() {
+    public GridPane keskOsa(TextField tunnid, TextField minutid, TextField sekundid) {
+        Text koolon = new Text(":");
+        Text koolon2 = new Text(":");
+        koolon.setFill(Paint.valueOf("#1b6a63"));
+        koolon2.setFill(Paint.valueOf("#1b6a63"));
+        koolon.getStyleClass().add("koolon");
+        koolon2.getStyleClass().add("koolon");
+        //gridpane ja selle joondamine
         GridPane grid = new GridPane();
-        grid.setAlignment(javafx.geometry.Pos.CENTER);// Set alignment to center
-        grid.setVgap(10);
-        Circle ring = new Circle(100);
+        grid.setAlignment(Pos.CENTER);// Set alignment to center
+        grid.setVgap(25);
+        //lisaveerg algusesse, et ringNupp oleks sobival kohal ja piisavalt suur
+        grid.getColumnConstraints().add(new ColumnConstraints(20));
+        //grid.setGridLinesVisible(true);
 
+        //tehakse sobivate suurustega veerud gridpaneis
+        for (int i = 0; i < 7; i++) {
+            if (i % 2 == 0)
+                grid.getColumnConstraints().add(new ColumnConstraints(11));
+            else
+                grid.getColumnConstraints().add(new ColumnConstraints(47));
+        }
+        grid.getColumnConstraints().add(new ColumnConstraints(20));//lisaveerg  lõppu
+
+        //et ringNupp oleks keskel tehakse stack pane
+        StackPane stackpane = new StackPane(); //for overlapping
+        stackpane.setAlignment(Pos.CENTER);
+
+        //suure nupu tegemine
+        Circle ring = new Circle(100);
         Button ringNupp = new Button();
         ringNupp.setShape(ring);
         ringNupp.setPrefSize(200,200);
         ringNupp.setText("Alusta");
         ringNupp.setStyle("-fx-background-color: #80C4B7; -fx-border-color: #369a89; -fx-border-width: 2px;" +
                 "-fx-font-size: 38px; -fx-text-fill: #1b6a63; -fx-font-family: Norasi; ");
-
-        TextField kirjutuskast = new TextField("Eesmärk (sekundites)");
-        kirjutuskast.setLayoutY(55);
-        //lisame kirjutuskastile css failist style'ingu
-        kirjutuskast.getStyleClass().add("text-field");
-
-
-        //kirjutuskast.getStylesheets().add("/home/samanta/projektid/Studytimer/pomodoro/src/main/resources/com/example/pomodoro/stylesheet.css");
-
-
+        //helenduse ettevalmistus hoverides
         DropShadow dropShadow = new DropShadow(0, Color.web("#1b6a63"));
         ringNupp.setEffect(dropShadow);
         ringNupp.setOnMouseEntered(event ->
@@ -154,16 +166,23 @@ public class HelloApplication extends Application {
         ringNupp.setOnMouseClicked(e -> {
             //kui taimer juba tehtud on ja see jookseb praegu (ei tee uut taimerit)
             if (jookseb)
-                taimer.kaivita(ringNupp);
+                taimer.kaivita();
             else {
                 //kui taimerit pole ja seega see ka ei jookse, siis loome selle
                 jookseb = true;
-                Taimer taimer = new Taimer(kirjutuskast);
-                taimer.kaivita(ringNupp);
+                Taimer taimer = new Taimer(ringNupp,tunnid,minutid,sekundid);
+
+                if (taimer.getKasVoibAlustada()) //kas see on hea idee????
+                    taimer.kaivita();
             }
         });
-        grid.add(ringNupp, 0, 0);
-        grid.add(kirjutuskast,0,2);
+        stackpane.getChildren().add(ringNupp);
+        grid.add(stackpane, 0, 0,9,1);
+        grid.add(tunnid,2,1);
+        grid.add(minutid, 4, 1);
+        grid.add(sekundid,6,1);
+        grid.add(koolon,3,1);
+        grid.add(koolon2,5,1);
         //GridPane.setHalignment(ring, javafx.geometry.HPos.CENTER); // Align the circle within the cell
         return grid;
     }

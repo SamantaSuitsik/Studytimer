@@ -6,12 +6,22 @@
     -fx-focus-color: -fx-secondary-color;
 }
 
-.text-field {
-    -fx-accent: -fx-primary-color;
-    -fx-background-color: -fx-grey-color, #EDCBD2;
-    -fx-background-insets: 0, 0 0 1 0;
-    -fx-background-radius: 10;
+@font-face {
+    font-family: 'google';
+    src: "/home/samanta/projektid/Studytimer/pomodoro/src/main/resources/com/example/pomodoro/static/PlayfairDisplay-Black.ttf";
 }
-.text-field:focused {
-    -fx-background-color: -fx-primary-color, #EDCBD2;
+
+.text-field {
+    -fx-font-family: Norasi, serif;
+    -fx-background-color: #EDCBD2;
+    -fx-text-fill: #1b6a63;
+    -fx-padding: 0;
+    -fx-font-size: 43;
+
+}
+
+
+.koolon {
+    -fx-font-family: Norasi;
+    -fx-font-size: 37;
 }
