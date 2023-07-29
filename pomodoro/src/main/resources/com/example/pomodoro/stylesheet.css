@@ -1,9 +1,12 @@
 * {
-    -fx-primary-color: #007acc;
-    -fx-secondary-color: #4B6EAF;
-    -fx-grey-color: #b9b9b9;
+    -fx-font-family: Norasi;
+}
 
-    -fx-focus-color: -fx-secondary-color;
+#border {
+    -fx-background-image: url("clouds.png");
+    -fx-background-size: 320 440;
+    -fx-background-position: center center;
+
 }
 
 @font-face {
@@ -11,17 +14,33 @@
     src: "/home/samanta/projektid/Studytimer/pomodoro/src/main/resources/com/example/pomodoro/static/PlayfairDisplay-Black.ttf";
 }
 
+.koolon {
+    -fx-text-fill: #e6e6e6;
+    -fx-font-size: 37;
+}
+
 .text-field {
-    -fx-font-family: Norasi, serif;
-    -fx-background-color: #EDCBD2;
-    -fx-text-fill: #1b6a63;
+    -fx-background-color: #1a1a1c;
+    -fx-text-fill: #e6e6e6;
     -fx-padding: 0;
     -fx-font-size: 43;
 
 }
+.text-field:disabled {
+    -fx-opacity: 1.0;
+    -fx-text-fill: #815db8;
 
+}
 
-.koolon {
-    -fx-font-family: Norasi;
-    -fx-font-size: 37;
+.label {
+    -fx-text-fill: #e6e6e6;
+}
+
+.aegadeNupp {
+    -fx-background-color: #151516;
+    -fx-text-fill: #815db8;
+}
+
+.aegadeLeht {
+    -fx-background-color: #1a1a1c;
 }
