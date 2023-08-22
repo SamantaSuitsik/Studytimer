@@ -111,6 +111,7 @@ public class Taimer {
             }
     }
 
+
     private void updateTimeElapsed(Button nupp) {
         long durationSec = duration + 1;
 
@@ -143,13 +144,13 @@ public class Taimer {
     }
 
     public void stop() throws Exception {
-        if (jookseb) {
+        if (jookseb || oliPausil) {
             timeline.stop();
             System.out.println("TA TULI LABI SIIT");
             oliPausil = false;
             jookseb = false; //vaja, et tehtaks käivitades uus taimer
             kirjutaFaili();//salvestame aja
-            TimeUnit.SECONDS.sleep(1);//et naha oma aega veel korraks
+            //TimeUnit.SECONDS.sleep(1);//et naha oma aega veel korraks
             nupp.setText("Alusta");
 
         }

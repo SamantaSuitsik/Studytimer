@@ -20,6 +20,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -27,7 +28,7 @@ import javafx.util.Duration;
 
 import java.util.ArrayList;
 //varvid: roosa - EDCBD2, heledaim roheline - 80C4B7, kesk roh - 369a89
-//tumeroh - 1b6a63
+//tumeroh - 1b6a63, tabbar must - 151516
 
 
 public class HelloApplication extends Application {
@@ -37,7 +38,7 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) {
         BorderPane border = new BorderPane();
-        //border.setId("border");
+
         TextField kirjutuskast = new TextField("00");
         TextField kirjutuskast2 = new TextField("00");
         TextField kirjutuskast3 = new TextField("00");
@@ -45,16 +46,15 @@ public class HelloApplication extends Application {
         //lõpetamise nupp
         Button lopuNupp = new Button("Lõpeta");
         lopuNupp.setPadding(new Insets(1,5,1,5));
+        lopuNupp.setStyle("-fx-background-color: #e6e6e6");
         lopuNupp.setVisible(false);//peidame alguses
 
-        //lisab borderpaneile regioonid
-        border.setBottom(addHBoxAlumine(lopuNupp)); //tõstab gridpanei kõrgemale!
-        border.setCenter(keskOsa(kirjutuskast,kirjutuskast2,kirjutuskast3,lopuNupp));
-        border.setStyle("-fx-background-color: #1a1a1c;");
-
-        //border.setBackground(new Background(bg));
         Scene scene = new Scene(border, 280,440);
-        //scene.getStylesheets().add(getClass().getResource("stylesheet.css").toString());
+
+        //lisab borderpaneile regioonid
+        border.setBottom(addHBoxAlumine(lopuNupp,stage,scene)); //tõstab gridpanei kõrgemale!
+        border.setCenter(keskOsa(kirjutuskast,kirjutuskast2,kirjutuskast3,lopuNupp));
+
         //lisame scene'ile css-i
         scene.getStylesheets().add(this.getClass().getResource("stylesheet.css").toExternalForm());
         //lisame kirjutuskastile css failist style'ingu
@@ -65,30 +65,30 @@ public class HelloApplication extends Application {
         stage.show();
     }
 
-    public VBox addHBoxAlumine(Button lopuNupp) {
+    public VBox addHBoxAlumine(Button lopuNupp, Stage stage, Scene scene) {
         VBox vbox = new VBox();
         vbox.setPadding(new Insets(15, 0, 0, 0));
         vbox.setSpacing(40);
         vbox.setAlignment(Pos.BASELINE_CENTER);
         vbox.setPrefSize(440,100);
 
-        //tab bar
+        //tab bar - hetkel pole suurt kasutust
         HBox tabbar = new HBox();
         tabbar.setAlignment(Pos.CENTER);
         tabbar.setPadding(new Insets(1,1,1,1));
         tabbar.setMaxHeight(23);
         tabbar.setMinHeight(23);
-        tabbar.setStyle("-fx-background-color: #151516;");
+
         //aegade nupp
         Button aegadeNupp = new Button();
-        aegadeNupp.setPadding(new Insets(0,0,0,0));//hitbox on vaiksem nupul
+        aegadeNupp.setPadding(new Insets(0,0,10,0));//hitbox on vaiksem nupul
         aegadeNupp.getStyleClass().add("aegadeNupp");
         tabbar.getChildren().add(aegadeNupp);
 
         //nupp kolmnurga pildiks
-        ImageView pilt = new ImageView(new Image(getClass().getResourceAsStream("lillakolmnurk.png")));
-        pilt.setFitHeight(18);
-        pilt.setFitWidth(20);
+        ImageView pilt = new ImageView(new Image(getClass().getResourceAsStream("kaunistusega2.png")));
+        pilt.setFitHeight(34); //18
+        pilt.setFitWidth(36); //20
         aegadeNupp.setGraphic(pilt);
         aegadeNupp.setOnMouseEntered(event -> {
             aegadeNupp.setText("Ajad");
@@ -99,7 +99,7 @@ public class HelloApplication extends Application {
 
         aegadeNupp.setOnMouseClicked(event -> {
             try {
-                aegadeEkraan();
+                aegadeEkraan(stage,scene);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -149,17 +149,29 @@ public class HelloApplication extends Application {
         return vbox;
     }
 
-    private void aegadeEkraan() throws Exception {
+    private void aegadeEkraan(Stage stage, Scene scene) throws Exception {
         //votame ajad Taimeri klassi abiga
         ArrayList<String> ajad = Taimer.loeFailist();
         System.out.println(ajad);
 
         VBox vbox = new VBox();
-        vbox.getStyleClass().add("aegadeLeht");
-        vbox.setPadding(new Insets(15, 10, 15, 10));
+        vbox.setPadding(new Insets(0, 10, 15, 0));
         vbox.setSpacing(10);
         vbox.setAlignment(Pos.BASELINE_CENTER);
         vbox.setPrefSize(440,280);
+
+        Button tagasiNupp = new Button();
+        tagasiNupp.setPadding(new Insets(13,0,0,1));
+        ImageView pilt = new ImageView(new Image(getClass().getResourceAsStream("kumernool.png")));
+        pilt.setFitHeight(25);
+        pilt.setFitWidth(15);
+        tagasiNupp.setGraphic(pilt);
+
+        Button clearNupp = new Button("-");
+
+        //hbox selleks et tagasi nupp panna vasakule
+        HBox hbox = new HBox();
+        hbox.getChildren().addAll(tagasiNupp,vbox);
 
         //lisatakse ajad ekraanile
         for (int i = 0; i < ajad.size(); i++) {
@@ -169,14 +181,27 @@ public class HelloApplication extends Application {
             vbox.getChildren().add(ajaTekst);
         }
 
+        tagasiNupp.setOnMouseClicked(event -> {
+            stage.setTitle("Study timer");
+            stage.setScene(scene);
+            stage.show();
+        });
+
+        //et saaks scrollida
+        ScrollPane scroll = new ScrollPane();
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.getStyleClass().add("scroll");
+        scroll.setContent(hbox);
+
         //uus stage ja scene
-        Stage stageAjad = new Stage();
-        Scene scene = new Scene(vbox,280,440);
+        //Stage stageAjad = new Stage();
+        Scene sceneAjad = new Scene(scroll,280,440);
         //lisame scene'ile css-i
-        scene.getStylesheets().add(this.getClass().getResource("stylesheet.css").toExternalForm());
-        stageAjad.setTitle("Ajad");
-        stageAjad.setScene(scene);
-        stageAjad.show();
+        sceneAjad.getStylesheets().add(this.getClass().getResource("stylesheet.css").toExternalForm());
+        stage.setTitle("Ajad"); //kasutame algset stagei et uus leht ei avaneks
+        stage.setScene(sceneAjad);
+        stage.show();
     }
 
     public void animateGlowEffect(Button button) {
